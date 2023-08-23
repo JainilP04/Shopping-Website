@@ -1,0 +1,147 @@
+{% extends 'app/base.html' %}
+{% load static %}
+{% block title %}Checkout{% endblock title %}
+{% block main-content %}
+<div class="container">
+ <div class="row mt-5">
+  <div class="col-sm-6">
+    <h4>Order Summary</h4>
+    <hr>
+    {% for item in cart_items %}
+      <div class="card mb-2">
+        <div class="card-body">
+          <h5>Product: {{item.product.title}}</h5>
+          <p>Quantity: {{item.quantity}}</p>
+          <p class="fw-bold">Price: {{item.total_cost}}</p>
+        </div>
+      </div>
+    {% endfor %}
+    <p class="fw-bold">Total Cost + Rs. 70  = {{totalcost}}</p>
+    <small>(Rs. 70 Delivery Charge)</small> <hr>
+    <small></small>
+  </div>
+  <div class="col-sm-4 offset-sm-1">
+    <h4>Select Shipping Address</h4>
+    <hr>
+    <form action="/paymentdone" id="myform">
+      {% csrf_token %}
+    {% for ad in add %}
+      <div class="card">
+        <div class="card-body">
+        <h5>{{ad.name}}</h5>
+        <p>{{ad.locality}}, {{ad.city}}, {{ad.state}}- {{ad.zipcode}}</p>
+        </div>
+      </div>
+        <div class="form-check mt-2 mb-5">
+          <input class="form-check-input" type="radio" name="custid" id="custadd{{forloop.counter}}" value="{{ad.id}}" checked>
+          <label class="form-check-label fw-bold" for="custadd{{forloop.counter}}">
+            Address: {{ forloop.counter }} </label>
+        </div>
+      {% endfor %}
+        <div class="border p-3">
+          {%comment %}
+            <button type="submit" class="btn btn-warning mt-3 px-5 fw-bold" id="continuebtn">Continue</button>
+          {%endcomment%}
+          
+          <!-- Set up a container element for the button -->
+          <p class="fw-bold">Payment Options:</p>
+          
+            <button type="submit" class="btn btn-success w-100">COD</button><br>
+            <!--button id="rzp-button1" class="btn btn-lg btn-primary btn-block" type="submit">Pay with Razorpay</button-->
+            
+            <div class="container">
+    
+              <br>
+              <button id="rzp-button1" class="btn btn-lg btn-primary btn-block w-100"  type="button">Pay with Razorpay</button>
+              <!--button type="button" class="btn btn-primary w-100 mt-2">Pay with Razorpay</button-->
+            </div>
+            <br>
+            <div id="paypal-button-container"></div>
+        </div>
+        <!--form><script src="https://checkout.razorpay.com/v1/payment-button.js" 
+          data-payment_button_id="pl_J62nhJDnq3irmv" async> </script> 
+        </form-->
+      </form>
+    </div>
+  </div>
+</div>
+<div class="info">
+{% endblock main-content %}
+
+{% block payment-gateway %} 
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+var options = {
+    "key": "rzp_test_ywgUI17AHk81LU", // Enter the Key ID generated from the Dashboard
+    "amount": '{{totalcost}}'*100, // Amount is in currency subunits. Default currency is INR. Hence, 50000 refers to 50000 paise
+    "currency": "INR",
+    "name": "The Little Things",
+    "description": "Thanks For Purchasing",
+    //"image": "https://example.com/your_logo",
+    "order_id": "{{order_id}}", //This is a sample Order ID. Pass the `id` obtained in the response of Step 1
+    "callback_url": "http://127.0.0.1:8000/orders/",
+    "handler": function (response){
+      //alert(response.razorpay_payment_id);
+      //alert(response.razorpay_order_id);
+      //alert(response.razorpay_signature)
+      document.getElementById("myform").submit()
+    },
+
+
+    "prefill": {
+        "name": "{{request.user.name}}",
+        "email": "{{request.user.email}}",
+        "contact":  "+91"  + "{{request.user.phone}}"
+    },
+    "notes": {
+        "address": "Razorpay Corporate Office"
+    },
+    "theme": {
+        "color": "#3399cc"
+    }
+};
+var rzp1 = new Razorpay(options);
+document.getElementById('rzp-button1').onclick = function(e){
+    rzp1.open();
+    e.preventDefault();
+    //document.getElementById("myform").submit()
+}
+
+
+
+</script>
+
+<!-- Include the PayPal JavaScript SDK -->
+<script src="https://www.paypal.com/sdk/js?client-id=AZy13e7NjBRzcviM88CXFuySmirfz2NvIySmh254ERjwCClZDKtvL7m3MiIL-bgNJ-pobGp7KtRctb4D&currency=USD"></script>
+
+<script>
+    // Render the PayPal button into #paypal-button-container
+    paypal.Buttons({
+
+        // Set up the transaction
+        createOrder: function(data, actions) {
+            return actions.order.create({
+                purchase_units: [{
+                    amount: {
+                        value: '{{totalcost}}'
+                    }
+                }]
+            });
+        },
+
+        // Finalize the transaction
+        onApprove: function(data, actions) {
+            return actions.order.capture().then(function(details) {
+                // Show a success message to the buyer
+                alert('Transaction completed by ' + details.payer.name.given_name + '!');
+                document.getElementById("myform").submit()
+            });
+        }
+
+
+    }).render('#paypal-button-container');
+</script>
+
+
+{% endblock payment-gateway %}

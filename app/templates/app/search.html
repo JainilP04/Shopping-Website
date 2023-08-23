@@ -1,0 +1,44 @@
+{% extends 'app/base.html' %}
+{% load static %}
+{% block title %}search{% endblock title %}
+{% block main-content %}
+
+
+<h2 class="text center" style="margin-left: 20px;"> Search Results:  </h5>
+
+    <hr>
+
+    <div class="container">
+
+        <div class="row justify-content-center m-4">
+
+            {% if products %}
+
+                {% for product in products %}
+    
+                <!--div class="col-xm-3 col-sm-3 col-md-4">
+                    <div class="card align-items-center" style="width: 18rem;"-->
+                <div class="col-md-4">
+                        <div class="card m-3 p-2" style="width: 18rem; height: 30rem; box-shadow: 4px 4px #c291fa; border-radius: 25px 15px;">
+                        <img src='{{product.product_image.url}}'  height = "300" class="card-img-top" alt="...">
+                        <div class="card-body">
+                            <div class="fw-bold">{{product.title}}</div>
+                            <div class="fw-bold">Rs. {{product.discounted_price}} <small class="fw-light text-decoration-line-through">{{product.selling_price}}</small></div>
+                            <a href="{% url 'product-detail' product.id %}"><button id="qv{{i.id}}" class="btn btn-primary cart">QuickView</button></a>
+                        </div>
+                    </div>
+                </div>
+    
+                {% endfor %}
+    
+            {% else %}
+                 <p>No Products available </p>
+            {% endif %}
+
+        </div>
+
+    </div>
+
+
+
+{% endblock main-content %}
